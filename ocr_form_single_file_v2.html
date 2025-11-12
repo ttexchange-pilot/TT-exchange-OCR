@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OCR กล้อง & อัปโหลด (ไฟล์เดียว)</title>
+  <style>
+    :root{ --maxw: 980px; --gap: 12px; --radius: 12px; --shadow: 0 6px 18px rgba(0,0,0,.08); --border: 1px solid #e5e7eb; }
+    *{ box-sizing: border-box; }
+    body{ font-family: ui-sans-serif, -apple-system, Segoe UI, Roboto, 'Noto Sans Thai', sans-serif; margin:0; background:#f7fafc; color:#111827; }
+    header{ position:sticky; top:0; z-index:10; background:white; box-shadow: var(--shadow); padding:14px 16px; }
+    header .wrap{ max-width: var(--maxw); margin:0 auto; display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+    header h1{ font-size:18px; margin:0; }
+    main{ max-width: var(--maxw); margin:20px auto; padding: 0 16px 80px; }
+    .card{ background:white; border-radius: var(--radius); box-shadow: var(--shadow); border: var(--border); padding:16px; margin-bottom:16px; }
+    .grid{ display:grid; gap: var(--gap); grid-template-columns: repeat(12, 1fr); }
+    .col-12{ grid-column: span 12; } .col-6{ grid-column: span 6; } .col-4{ grid-column: span 4; }
+    @media (max-width: 860px){ .col-6,.col-4{ grid-column: span 12; } }
+    label{ display:block; font-weight:600; margin-bottom:6px; }
+    input[type="text"], input[type="date"], textarea, select { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:10px; outline:none; }
+    textarea{ min-height:100px; }
+    .btn{ display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:10px; border:1px solid #d1d5db; background:#111827; color:white; cursor:pointer; text-decoration:none; }
+    .btn.secondary{ background:white; color:#111827; }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
+    .toolbar{ display:flex; flex-wrap:wrap; gap:10px; }
+    .hint{ font-size:12px; color:#6b7280; margin-top:6px; }
+    .preview{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+    .preview img, .preview canvas{ max-width:300px; width:100%; border-radius:10px; border:1px solid #e5e7eb; background:#f3f4f6; }
+    .log{ background:#0b1021; color:#d1e7ff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; padding:12px; border-radius:10px; min-height:140px; white-space:pre-wrap; overflow:auto; }
+    .badge{ font-size:12px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; }
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    video{ width:100%; max-width:300px; border-radius:10px; border:1px solid #e5e7eb; background:#000; }
+    .footer{ position:fixed; bottom:0; left:0; right:0; background:white; box-shadow: var(--shadow); padding:10px 16px; }
+    .footer .wrap{ max-width: var(--maxw); margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .kbd{ background:#111827; color:#fff; padding:2px 6px; border-radius:6px; font-size:12px; }
+    .table{ width:100%; border-collapse: collapse; } .table th,.table td{ border:1px solid #e5e7eb; padding:8px; font-size:14px; } .table th{ background:#f8fafc; text-align:left; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="badge">v2</div>
+      <h1>OCR กล้อง & อัปโหลด — เติมฟอร์มอัตโนมัติ</h1>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="grid">
+        <div class="col-12">
+          <div class="toolbar">
+            <label class="btn">
+              <input type="file" id="fileInput" accept="image/*;capture=camera" capture="environment" style="display:none" />
+              📷 อัปโหลด / ถ่ายรูปเอกสาร (ไฟล์)
+            </label>
+            <button class="btn secondary" id="openCam">🎥 เปิดกล้อง</button>
+            <button class="btn secondary" id="snapBtn" disabled>📸 ถ่ายภาพ</button>
+            <button class="btn" id="runBtn" disabled>🧠 เริ่ม OCR</button>
+            <button class="btn secondary" id="clearBtn">🧹 เคลียร์</button>
+          </div>
+          <div class="hint">หมายเหตุ iPhone: เปิดไฟล์นี้ผ่าน HTTPS หรือในเบราว์เซอร์หลัก เพื่อสิทธิ์กล้อง/รูปภาพที่สมบูรณ์</div>
+        </div>
+
+        <div class="col-12">
+          <div class="preview">
+            <video id="video" playsinline muted></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <img id="previewImg" alt="preview" />
+            <div style="flex:1; min-width:260px;">
+              <div class="row" style="margin-bottom:6px;">
+                <span class="badge">สถานะ</span>
+                <span id="statusText">ยังไม่ได้เริ่ม</span>
+              </div>
+              <div class="log" id="logBox"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="margin-bottom: 8px;">
+        <span class="badge">ฟอร์ม</span>
+        <span class="hint">ระบบจะพยายามเติมให้อัตโนมัติ — แก้ไขได้เองก่อนบันทึก</span>
+      </div>
+      <div class="grid">
+        <div class="col-6"><label>ประเภทเอกสาร</label><select id="docType"><option value="">Auto-detect</option><option value="thai_id">บัตรประชาชน</option><option value="passport">พาสปอร์ต</option><option value="driver">ใบขับขี่</option></select></div>
+        <div class="col-6"><label>สัญชาติ</label><input type="text" id="nationality" placeholder="Thai / THA / ..." /></div>
+        <div class="col-6"><label>ชื่อ (EN)</label><input type="text" id="firstNameEn" placeholder="GIVEN NAME" /></div>
+        <div class="col-6"><label>นามสกุล (EN)</label><input type="text" id="lastNameEn" placeholder="SURNAME" /></div>
+        <div class="col-6"><label>ชื่อ-นามสกุล (TH)</label><input type="text" id="fullNameTh" placeholder="ชื่อ-สกุล ภาษาไทย" /></div>
+        <div class="col-6"><label>เพศ</label><input type="text" id="gender" placeholder="M/F หรือ ชาย/หญิง" /></div>
+        <div class="col-6"><label>หมายเลขเอกสาร / เลขบัตร</label><input type="text" id="docNumber" placeholder="เลขบัตร 13 หลัก / Passport No." /></div>
+        <div class="col-6"><label>เลขหลังบัตร / หมายเลขกำกับ</label><input type="text" id="backId" placeholder="(ถ้ามี)" /></div>
+        <div class="col-6"><label>วันเกิด</label><input type="text" id="dob" placeholder="YYYY-MM-DD หรือ DD/MM/YYYY" /></div>
+        <div class="col-6"><label>วันหมดอายุ</label><input type="text" id="expiry" placeholder="YYYY-MM-DD หรือ DD/MM/YYYY" /></div>
+        <div class="col-12"><label>ที่อยู่ (ถ้ามี)</label><textarea id="address" placeholder="บ้านเลขที่ แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์"></textarea></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="margin-bottom: 6px;">
+        <span class="badge">บันทึกผลลัพธ์</span>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="downloadCsv">⬇️ CSV</button>
+        <button class="btn secondary" id="downloadJson">⬇️ JSON</button>
+        <button class="btn" id="copyClipboard">📋 คัดลอก</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row" style="margin-bottom:6px;"><span class="badge">ผลลัพธ์ OCR (ข้อความดิบ)</span></div>
+      <textarea id="rawOcr" readonly></textarea>
+    </section>
+  </main>
+
+  <div class="footer">
+    <div class="wrap">
+      <div class="row"><span class="badge">คู่มือเร็ว</span><span>1) ถ่าย/อัปโหลด 2) กด <span class="kbd">เริ่ม OCR</span> 3) ตรวจฟอร์ม 4) ดาวน์โหลด</span></div>
+      <div class="row"><span class="hint">* ต้องมีอินเทอร์เน็ตเพื่อโหลด Tesseract.js จาก CDN</span></div>
+    </div>
+  </div>
+
+  <script>
+    // UI helpers
+    const el = id => document.getElementById(id);
+    const logBox = el('logBox'), statusText = el('statusText');
+    function log(msg){ logBox.textContent += (logBox.textContent?'\\n':'') + msg; logBox.scrollTop = logBox.scrollHeight; }
+    function status(msg){ statusText.textContent = msg; }
+
+    const fileInput = el('fileInput');
+    const previewImg = el('previewImg');
+    const video = el('video');
+    const canvas = el('canvas');
+    const runBtn = el('runBtn');
+    const openCam = el('openCam');
+    const snapBtn = el('snapBtn');
+    const clearBtn = el('clearBtn');
+    const rawOcr = el('rawOcr');
+
+    // --- Camera ---
+    let stream = null;
+    async function startCamera(){
+      try{
+        // iOS/Safari requires https or localhost; give helpful error if blocked
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        video.srcObject = stream;
+        await video.play();
+        snapBtn.disabled = false;
+        status('กล้องพร้อม');
+        log('🎥 เปิดกล้องแล้ว');
+      }catch(err){
+        log('❌ เปิดกล้องไม่สำเร็จ: ' + err.message + '\\nคำแนะนำ: เปิดไฟล์นี้ผ่าน HTTPS/บราวเซอร์หลัก และอนุญาตสิทธิ์กล้อง');
+      }
+    }
+    openCam.addEventListener('click', startCamera);
+
+    snapBtn.addEventListener('click', ()=>{
+      if(!video.srcObject){ return; }
+      const w = video.videoWidth, h = video.videoHeight;
+      if(!w || !h){ log('⚠️ กล้องยังไม่พร้อม ลองใหม่'); return; }
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      previewImg.src = dataUrl;
+      runBtn.disabled = false;
+      status('ได้ภาพจากกล้องแล้ว — พร้อม OCR');
+      log('📸 ถ่ายภาพเรียบร้อย');
+    });
+
+    // --- File Upload ---
+    function loadFile(file){
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => { previewImg.src = e.target.result; resolve(); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    fileInput.addEventListener('change', async (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(!f){ return; }
+      try{
+        await loadFile(f); // HEIC บน iOS จะถูก Safari แปลงให้แสดงผลได้ใน <img> โดยอัตโนมัติ
+        runBtn.disabled = false;
+        status('โหลดรูปแล้ว — พร้อม OCR');
+        log(`📄 เลือกไฟล์: ${f.name} (${Math.round(f.size/1024)} KB)`);
+      }catch(err){
+        log('❌ โหลดไฟล์ไม่สำเร็จ: ' + err.message);
+      }
+    });
+
+    // --- Clear ---
+    clearBtn.addEventListener('click', ()=>{
+      try{
+        if(stream) stream.getTracks().forEach(t=>t.stop());
+      }catch(_){}
+      video.srcObject = null;
+      previewImg.src = '';
+      fileInput.value = '';
+      rawOcr.value = '';
+      logBox.textContent = '';
+      runBtn.disabled = true;
+      snapBtn.disabled = true;
+      status('ยังไม่ได้เริ่ม');
+    });
+
+    // --- OCR ---
+    function ensureTesseractLoaded(){
+      if(!window.Tesseract){
+        throw new Error('ไม่พบ Tesseract.js — โปรดเชื่อมต่ออินเทอร์เน็ตเพื่อโหลดสคริปต์');
+      }
+    }
+
+    async function runOCR(){
+      if(!previewImg.src){ alert('กรุณาถ่าย/อัปโหลดภาพก่อน'); return; }
+      ensureTesseractLoaded();
+      status('กำลังทำ OCR...'); log('🚀 เริ่ม OCR (eng+tha)');
+      runBtn.disabled = true;
+      try{
+        const worker = await Tesseract.createWorker('eng+tha', 1, {
+          logger: m => { if(m.status){ status(m.status + (m.progress?` ${(m.progress*100).toFixed(0)}%`:'')); } }
+        });
+        const { data } = await worker.recognize(previewImg);
+        await worker.terminate();
+        const text = (data && data.text) ? data.text : '';
+        rawOcr.value = text;
+        log('✅ OCR เสร็จสิ้น');
+        parseAndFill(text);
+      }catch(err){
+        log('❌ OCR ล้มเหลว: ' + err.message);
+      }finally{
+        runBtn.disabled = false;
+        status('พร้อม');
+      }
+    }
+    runBtn.addEventListener('click', runOCR);
+
+    // --- Parse & Fill (ย่อจากรุ่นก่อน) ---
+    function toDateISO(s){
+      if(!s) return '';
+      s = s.replace(/[.]/g,'/').replace(/\s+/g,' ').trim();
+      let m = s.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+      if(m){ const [_, d, mo, y] = m; return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+      m = s.match(/\b(\d{4})[-/](\d{1,2})[-/](\d{1,2})\b/);
+      if(m){ const [_, y, mo, d] = m; return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0'); }
+      return s;
+    }
+    function detectType(text){
+      const t = text.toUpperCase();
+      if(t.includes('P<') || (t.includes('<<') && /\n.*\n/.test(t))) return 'passport';
+      if(/\b(\d\s?\d{4}\s?\d{5}\s?\d{2}\s?\d)\b|\b\d{13}\b/.test(text.replace(/[^0-9]/g,' '))) return 'thai_id';
+      if(t.includes('DRIVING') || t.includes('LICENCE') || t.includes('DEPARTMENT OF LAND TRANSPORT')) return 'driver';
+      return '';
+    }
+    function parseMRZ(text){
+      const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      let l1 = '', l2 = '';
+      for(let i=0;i<lines.length;i++){
+        if(lines[i].length >= 40 && /[<A-Z0-9]/.test(lines[i])){ if(!l1) l1=lines[i]; else if(!l2){ l2=lines[i]; break; } }
+      }
+      if(!l1 || !l2) return null;
+      l1 = l1.replace(/\s/g,''); l2 = l2.replace(/\s/g,'');
+      const nationality = l1.substring(2,5).replace(/</g,'');
+      const namePart = l1.substring(5);
+      const [surnameRaw, givenRaw] = namePart.split('<<');
+      const lastNameEn = (surnameRaw||'').replace(/</g,' ').trim();
+      const firstNameEn = (givenRaw||'').replace(/</g,' ').trim();
+      const passportNo = l2.substring(0,9).replace(/</g,'');
+      const birth = l2.substring(13,19);
+      const sex = l2.substring(20,21);
+      const expiry = l2.substring(21,27);
+      const yyMMddToISO = yymmdd => /^[0-9]{6}$/.test(yymmdd) ? ((yymmdd.substring(0,2)>='31'?'19':'20')+yymmdd.substring(0,2))+'-'+yymmdd.substring(2,4)+'-'+yymmdd.substring(4,6) : '';
+      return { docType:'passport', nationality, firstNameEn, lastNameEn, docNumber: passportNo, dob: yyMMddToISO(birth), expiry: yyMMddToISO(expiry), gender: (sex==='F'?'F':(sex==='M'?'M':'')) };
+    }
+    function parseThaiID(text){
+      const idMatch = text.replace(/[^0-9]/g,' ').match(/\b(\d{1}\s?\d{4}\s?\d{5}\s?\d{2}\s?\d)\b|\b(\d{13})\b/);
+      const id = idMatch ? idMatch[0].replace(/\s/g,'') : '';
+      let dob=''; const dob1 = text.match(/เกิด[^0-9]*(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4})/); const dob2 = text.match(/Birth\s*Date[^0-9]*(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/i);
+      if(dob1) dob=dob1[1]; else if(dob2) dob=dob2[1];
+      const firstEn=(text.match(/GIVEN\s*NAME[:\s]*([A-Z' -]+)/i)||[, ''])[1].trim();
+      const lastEn =(text.match(/SURNAME[:\s]*([A-Z' -]+)/i)||[, ''])[1].trim();
+      const fullNameTh=(text.match(/ชื่อ[\s:]*([\u0E00-\u0E7F\s]+)\n/)||[, ''])[1].trim();
+      return { docType:'thai_id', nationality:'THA', docNumber:id, firstNameEn:firstEn, lastNameEn:lastEn, fullNameTh, dob: toDateISO(dob) };
+    }
+    function parseDriver(text){
+      const lic=(text.match(/(DL|LIC|เลขที่ใบอนุญาต|Licence No\.?)[^A-Z0-9]*([A-Z0-9-]{6,})/i)||[,,''])[2];
+      const exp=(text.match(/Expiry|หมดอายุ[^0-9]*(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4})/i)||[, ''])[1];
+      const name=(text.match(/Name[:\s]*([A-Z' -]+)/i)||[, ''])[1];
+      return { docType:'driver', nationality:'THA', docNumber: lic||'', expiry: toDateISO(exp), firstNameEn: name };
+    }
+    function fillForm(d){
+      const set=(id,v)=>{ if(v) el(id).value=v; };
+      set('docType', d.docType); set('nationality', d.nationality);
+      set('firstNameEn', d.firstNameEn); set('lastNameEn', d.lastNameEn);
+      set('fullNameTh', d.fullNameTh); set('gender', d.gender);
+      set('docNumber', d.docNumber); set('backId', d.backId);
+      set('dob', d.dob); set('expiry', d.expiry); set('address', d.address);
+    }
+    function parseAndFill(text){
+      const forced = el('docType').value;
+      let p=null, kind=forced||detectType(text);
+      if(kind==='passport') p=parseMRZ(text);
+      else if(kind==='thai_id') p=parseThaiID(text);
+      else if(kind==='driver') p=parseDriver(text);
+      else { p=parseMRZ(text)||parseThaiID(text)||parseDriver(text); }
+      if(p){ fillForm(p); log('🧩 ประเภทเอกสาร: '+p.docType); }
+      else { log('⚠️ ระบุประเภทเอกสารไม่ได้ กรุณากรอกเอง'); }
+    }
+
+    // Export
+    function captureForm(){
+      return {
+        docType: el('docType').value, nationality: el('nationality').value,
+        firstNameEn: el('firstNameEn').value, lastNameEn: el('lastNameEn').value,
+        fullNameTh: el('fullNameTh').value, gender: el('gender').value,
+        docNumber: el('docNumber').value, backId: el('backId').value,
+        dob: el('dob').value, expiry: el('expiry').value, address: el('address').value
+      };
+    }
+    function download(filename, text){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'})); a.download=filename; a.click(); }
+    el('downloadCsv').addEventListener('click', ()=>{ const d=captureForm(); const header=['docType','nationality','firstNameEn','lastNameEn','fullNameTh','gender','docNumber','backId','dob','expiry','address']; const row=header.map(k=>`"${String(d[k]||'').replace(/"/g,'""')}"`).join(','); download('ocr_data.csv', header.join(',')+'\n'+row+'\n'); });
+    el('downloadJson').addEventListener('click', ()=>{ download('ocr_data.json', JSON.stringify(captureForm(),null,2)); });
+    el('copyClipboard').addEventListener('click', async()=>{ const d=captureForm(); await navigator.clipboard.writeText(Object.entries(d).map(([k,v])=>`${k}: ${v||''}`).join('\n')); log('📋 คัดลอกข้อมูลแล้ว'); });
+
+    // Warn if no Tesseract
+    window.addEventListener('load', ()=>{
+      setTimeout(()=>{
+        if(!window.Tesseract){
+          log('⚠️ ไม่พบ Tesseract.js — ต้องใช้อินเทอร์เน็ตเพื่อโหลดจาก CDN');
+        }else{
+          log('ℹ️ โหลด Tesseract.js แล้ว พร้อมทำ OCR');
+        }
+      }, 800);
+    });
+  </script>
+  <!-- CDN (ต้องมีอินเทอร์เน็ต) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</body>
+</html>

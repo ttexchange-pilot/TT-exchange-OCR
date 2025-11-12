@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>TT Exchange — OCR</title>
+  <link rel="stylesheet" href="assets/css/ocr.css"/>
+  <!-- Tesseract.js via CDN (eng+tha) -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title">OCR ลูกค้า — พาสปอร์ต / บัตรประชาชน / ใบขับขี่</div>
+      <a class="btn" href="index.html">กลับหน้าแรก</a>
+    </div>
+
+    <div class="card">
+      <div class="grid">
+        <div class="col-6">
+          <div id="dropzone" class="drag">
+            <div style="margin-bottom:8px;">ลากรูปมาวางที่นี่ หรือ</div>
+            <label class="btn">
+              เลือกรูปภาพ
+              <input id="file" type="file" accept="image/*" multiple />
+            </label>
+            <div id="fileList" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+          <div class="toolbar">
+            <button id="btn_ocr">เริ่ม OCR</button>
+            <button id="btn_clear">ล้างข้อมูล</button>
+          </div>
+          <div id="status" class="small">พร้อมใช้งาน</div>
+        </div>
+
+        <div class="col-6">
+          <div class="kv"><div>ชื่อ (EN):</div><input id="first_name" class="input" placeholder="First name"/></div>
+          <div class="kv"><div>นามสกุล (EN):</div><input id="last_name" class="input" placeholder="Last name"/></div>
+          <div class="kv"><div>เพศ:</div>
+            <select id="gender" class="input">
+              <option value="">—</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Unspecified</option>
+            </select>
+          </div>
+          <div class="kv"><div>สัญชาติ:</div><input id="nationality" class="input" placeholder="THA, KHM, CHN, ..."/></div>
+          <div class="kv"><div>เลขบัตรประชาชน:</div><input id="id_number" class="input" /></div>
+          <div class="kv"><div>เลขพาสปอร์ต:</div><input id="passport_number" class="input" /></div>
+          <div class="grid">
+            <div class="col-6 kv"><div>วันเกิด:</div><input id="dob" type="date" class="input"/></div>
+            <div class="col-6 kv"><div>ออกบัตร:</div><input id="doi" type="date" class="input"/></div>
+            <div class="col-6 kv"><div>หมดอายุ:</div><input id="doe" type="date" class="input"/></div>
+          </div>
+          <div class="kv"><div>ที่อยู่:</div><textarea id="address" rows="3" class="input" placeholder="บ้านเลขที่ ถนน ตำบล อำเภอ จังหวัด ประเทศ"></textarea></div>
+          <div class="toolbar">
+            <button id="btn_save">บันทึกลงเครื่อง</button>
+            <button id="btn_export">ส่งออก CSV</button>
+          </div>
+          <div class="small">CSV สามารถเปิดใน Excel ได้ทันที</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="small" style="margin-bottom:6px;">ข้อความที่ดึงได้ (ใช้ตรวจสอบความถูกต้อง):</div>
+      <pre id="raw"></pre>
+    </div>
+    <div class="small">
+      เคล็ดลับ: ภาพที่คมชัด สว่าง และตรง จะช่วยให้ OCR แม่นขึ้น — รองรับทั้งภาษาไทยและอังกฤษ
+    </div>
+  </div>
+
+  <script src="assets/js/ocr.js"></script>
+</body>
+</html>

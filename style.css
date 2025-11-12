@@ -1,0 +1,107 @@
+:root{--bg:#fffbea;--card:#fff;--brand:#ffd24d;--brand2:#f5b301;--text:#1f2937;--muted:#6b7280;--b:1px solid rgba(0,0,0,.08)}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+.container{max-width:1200px;margin:0 auto;padding:16px}
+.nav{position:sticky;top:0;background:#fff9e6;border-bottom:var(--b);z-index:10}
+.logo{width:32px;height:32px;border-radius:6px;object-fit:cover}
+.nav-inner{display:flex;gap:12px;align-items:center;padding:10px 0}
+.brand{display:flex;gap:12px;align-items:center}
+.brand-title{font-weight:700}
+.branch-tag,.role-tag{font-size:12px;background:#ffefaa;border:1px dashed #f2c200;padding:4px 8px;border-radius:8px;margin-top:2px;display:inline-block}
+.role-tag{background:#e6ffef;border-color:#84cc16}
+.tabs{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.tab-btn{padding:10px 14px;border-radius:10px;border:var(--b);background:#fff;cursor:pointer}
+.tab-btn.active{background:linear-gradient(90deg,var(--brand),var(--brand2));border-color:transparent}
+.tab-btn.danger{background:#fff0f0;border-color:#ffc5c5}
+.card{background:var(--card);border:var(--b);border-radius:12px;padding:16px}
+.login-card{max-width:980px;margin:20px auto}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:960px){.row2,.row3{grid-template-columns:1fr}}
+input,select,button{padding:12px;border-radius:10px;border:1px solid #d1d5db;font-size:16px}
+input:focus,select:focus,button:focus{outline:2px solid #ffe08a;outline-offset:1px}
+.btn{background:#fff;border:1px solid #d1d5db;cursor:pointer}
+.btn-primary{background:linear-gradient(90deg,var(--brand),var(--brand2));border:0}
+.btn-lg{padding:14px 18px;font-weight:700}
+.pill-group{display:flex;gap:8px}
+.pill{padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;cursor:pointer}
+.pill.active{background:linear-gradient(90deg,var(--brand),var(--brand2));border:0}
+.combo{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th,.table td{border-top:var(--b);border-bottom:var(--b);padding:8px 10px;text-align:left}
+.table td.center{text-align:center}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.section{display:none}.section.active{display:block}
+.screen{display:none}.screen.active{display:block}
+.muted{color:var(--muted);font-size:13px}.small{font-size:12px}
+.error{color:#b91c1c}
+/* Receipt */
+.receipt{max-width:880px;margin:0 auto}
+.receipt-wrap{background:#fff;border:1px dashed #d1d5db;border-radius:8px;padding:16px}
+.r-header{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.r-logo{width:56px;height:56px;border-radius:10px;object-fit:contain;background:#ffd24d;padding:4px}
+.r-company .r-name{font-weight:800}
+.r-title{font-weight:700;font-size:18px;margin-top:6px}
+.r-sub{color:#6b7280;margin-bottom:8px}
+.r-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media print {
+  .no-print{display:none!important}
+  body{background:#fff; width:80mm; margin:0 auto; font-size:13px}
+  .receipt{max-width:80mm}
+  .r-grid{grid-template-columns:1fr}
+  .r-logo{width:32mm;height:auto}
+  .receipt-wrap{padding:4mm}
+}
+
+/* === TTExchange tweaks (2025-11-12) === */
+
+/* Center the brand/logo in the top nav */
+.nav-inner{justify-content:center}
+.brand{justify-content:center}
+.brand .logo{display:block}
+
+/* Receipt header: easy centering helpers */
+.r-center{justify-content:center;text-align:center}
+.r-logo-center{display:block;margin:0 auto}
+
+/* Optional: white-only logo variant for dark backgrounds */
+.logo-white{filter:brightness(0) invert(1); background:transparent !important}
+
+/* Print-specific improvements */
+@media print{
+  /* Remove the dashed frame/border when printing */
+  .receipt-wrap{border:none !important; box-shadow:none !important; background:#fff}
+  /* Keep the receipt logo clean on paper */
+  .r-logo{background:none !important; filter:grayscale(1)}
+  /* Also center the top bar brand if rendered */
+  .nav-inner{justify-content:center}
+}
+
+
+/* --- Added: nav/brand & receipt refinements (patched) --- */
+.nav-inner{display:flex;gap:12px;align-items:center;padding:10px 0;justify-content:center}
+.brand{display:flex;gap:12px;align-items:center;justify-content:center}
+.brand .logo{display:block}
+
+/* Multi-currency list table */
+.r-items{width:100%; border-collapse: collapse; margin-top:8px}
+.r-items th, .r-items td{padding:6px 8px; border-bottom: 1px dashed #e5e7eb}
+.r-total{display:flex; justify-content:flex-end; gap:12px; margin-top:8px; font-weight:700}
+
+/* Print: nuke all borders inside receipt to remove frames completely */
+@media print{
+  .receipt, .receipt *{border: none !important; box-shadow:none !important}
+  .table th, .table td, .r-items th, .r-items td{border: none !important}
+  .receipt-wrap{border:none !important}
+}
+
+
+/* Tag showing which rate is in use (BUY/SELL) */
+.tag-rate{font-size:12px;background:#eef6ff;border:1px solid #dbeafe;color:#1e40af;padding:4px 8px;border-radius:8px;display:inline-block;margin:6px 0 4px}
+
+
+/* Receipt rate-mode line */
+.r-rate-mode{font-size:12px; margin:4px 0 8px; color:#374151}
+@media print{
+  .r-rate-mode{font-size:12px; margin:2mm 0 2mm; color:#000}
+}

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>TT Exchange — Multi-Company (Central)</title>
+<link href="assets/css/style.css" rel="stylesheet"/>
+</head>
+<body>
+<nav class="nav no-print">
+<div class="container nav-inner">
+<div class="brand">
+<img alt="TT" class="logo" src="assets/img/logo_mark.png"/>
+<div class="brand-title">TT Exchange — Multi-Company</div>
+<div class="role-tag" id="company-tag"></div>
+<div class="branch-tag" id="branch-tag"></div>
+<div class="role-tag" id="role-tag"></div>
+</div>
+<div class="tabs">
+<button class="tab-btn active" data-tab="tx">ทำรายการ</button>
+<button class="tab-btn" data-tab="rates">เรท</button>
+<button class="tab-btn" data-tab="logs">รายงาน</button>
+<button class="tab-btn" data-tab="receipt">ใบเสร็จ</button>
+<button class="tab-btn danger" id="logout">ออก</button>
+</div>
+</div>
+  <a href="ocr.html" class="nav-link">OCR</a>
+</nav>
+<main class="container">
+<section class="screen active" id="login-screen">
+<div class="card login-card">
+<h1>เข้าสู่ระบบ</h1>
+<div class="row3">
+<div>
+<label>โซน</label>
+<select id="companySel"></select>
+</div>
+<div>
+<label>สาขา</label>
+<select id="branchSel"></select>
+</div>
+<div>
+<label>บทบาท</label>
+<select id="roleSel">
+<option value="staff">พนักงาน</option>
+<option value="manager">ผู้จัดการ</option>
+<option value="admin">แอดมิน</option>
+</select>
+</div>
+</div>
+<div class="row3">
+<div>
+<label>PIN</label>
+<input id="pin" inputmode="numeric" maxlength="6" placeholder="5599" type="password"/>
+</div>
+<div>
+<label>ชื่อพนักงาน</label>
+<input id="staffName" placeholder="เช่น น.ส. ริญญ์รภัส"/>
+</div>
+<div>
+<label>รหัสพนักงาน</label>
+<input id="staffCode" placeholder="เช่น SP001"/>
+</div>
+</div>
+<div class="actions">
+<button class="btn btn-primary btn-lg" id="login-btn">เข้าสู่ระบบ</button>
+<div class="error" id="login-error"></div>
+</div>
+<div class="muted small">PIN ตัวอย่าง: staff=1111, manager=5599, admin=8888</div>
+</div>
+</section>
+<section class="screen" id="app-screen">
+<section class="section active" id="tx">
+<div class="card">
+<div class="section-head">
+<h2>ทำรายการ</h2>
+<div class="pill-group">
+<button class="pill active" data-mode="fx">ลูกค้ามี FX</button>
+<button class="pill" data-mode="thb">ลูกค้ามี THB</button>
+</div>
+</div>
+<h3>ข้อมูลลูกค้า</h3>
+<div class="row3">
+<div><label>ชื่อ-นามสกุล</label><input id="c-name"/></div>
+<div><label>Passport/ID</label><input id="c-id"/></div>
+<div><label>โทรศัพท์</label><input id="c-phone"/></div>
+</div>
+<h3>รายละเอียดรายการ</h3>
+<div class="row3">
+<div>
+<label>สกุลเงิน</label>
+<div class="combo">
+<input id="ccySearch" placeholder="ค้นหาเช่น USD, EUR…"/>
+<select id="ccyList"></select>
+</div>
+</div>
+<div>
+<label>เรท</label>
+              <div id="rate-mode-tag" class="tag-rate no-print" aria-live="polite">ใช้เรท: BUY</div>
+<input id="rate" step="0.0001" type="number"/>
+<label class="inline"><input id="special" type="checkbox"/> เรทพิเศษ</label>
+<input id="special-reason" placeholder="เหตุผลเรทพิเศษ">
+<input id="approver-pin" placeholder="PIN ผู้อนุมัติ" type="password"/>
+</input></div>
+<div>
+<label id="amtLabel">จำนวน FX</label>
+<input id="amt" step="0.0001" type="number"/>
+<label>เป็นเงินไทย</label>
+<input id="thb" readonly="" step="0.01" type="number"/>
+<div class="actions">
+<button class="btn" id="calc">คำนวณ (F2)</button>
+<button class="btn btn-primary btn-lg" id="make-receipt">ออกใบเสร็จ (F9)</button>
+</div>
+</div>
+</div><div class="card">
+<h3 class="no-print">หลายสกุลในใบเสร็จเดียว</h3>
+<div class="actions no-print" style="gap:8px; display:flex; flex-wrap:wrap">
+<button class="btn" id="add-line">+ เพิ่มสกุล</button>
+<button class="btn" id="clear-lines">ล้างรายการ</button>
+</div>
+<table class="r-items no-print" id="line-table" style="display:none">
+<thead><tr><th>สกุล</th><th>จำนวน FX</th><th>เรท</th><th>เป็นเงินไทย</th><th></th></tr></thead>
+<tbody id="line-body"></tbody>
+</table>
+<div class="r-total no-print" id="line-total" style="display:none">
+<div>รวมเป็นเงินไทย</div><div id="line-sum">0.00</div>
+</div>
+</div>
+</div>
+</section>
+<section class="section" id="rates">
+<div class="card">
+<div class="section-head">
+<h2>เรทสาขา</h2>
+<div class="actions">
+<button class="btn only-manager" id="add-rate">เพิ่มสกุลเงิน</button>
+<button class="btn danger only-manager" id="reset-rates">คืนค่าเริ่มต้น</button>
+<span class="muted">โซน: <strong id="rates-company"></strong></span>
+<span class="muted">สาขา: <strong id="rates-branch"></strong></span>
+</div>
+</div>
+<table class="table">
+<thead><tr><th>สกุล</th><th>Buy</th><th>Sell</th><th class="center">ลบ</th></tr></thead>
+<tbody id="rates-body"></tbody>
+</table>
+</div>
+</section>
+<section class="section" id="logs">
+<div class="card">
+<div class="section-head">
+<h2>รายงาน</h2>
+<div class="actions">
+<select id="filter-company"></select>
+<select id="filter-branch"></select>
+<button class="btn" id="export">ส่งออก CSV</button>
+<button class="btn danger only-manager" id="clear-logs">ล้างรายการ</button>
+</div>
+</div>
+<table class="table">
+<thead><tr><th>เลขที่</th><th>วันเวลา</th><th>โซน</th><th>สาขา</th><th>ลูกค้า</th><th>สกุล</th><th>FX</th><th>เรท</th><th>THB</th><th>Special</th></tr></thead>
+<tbody id="log-body"></tbody>
+</table>
+</div>
+</section>
+<section class="section" id="receipt">
+<div class="card receipt">
+<div class="receipt-wrap">
+<div class="r-header r-center">
+<img alt="TT" class="r-logo r-logo-center" src="assets/img/logo_mark.png"/>
+</div>
+<div class="r-company">
+<div class="r-name" id="r-company-name">Company Name</div>
+<div class="r-addr" id="r-company-addr">Address</div>
+<div class="r-addr" id="r-company-contact">Phone</div>
+</div>
+
+<table class="r-items" id="r-items" style="display:none">
+<thead><tr><th style="text-align:left">สกุล</th><th style="text-align:right">จำนวน FX</th><th style="text-align:right">เรท</th><th style="text-align:right">THB</th></tr></thead>
+<tbody id="r-items-body"></tbody>
+</table>
+<div class="r-total" id="r-total" style="display:none">
+<div>รวม THB ทั้งหมด</div><div id="r-sum"></div>
+</div>
+</div>
+<div class="r-title">ใบเสร็จรับเงิน / Receipt</div>
+<div class="r-sub">โซน: <span id="r-company"></span> • สาขา: <span id="r-branch"></span></div>
+              <div class="r-rate-mode" id="r-rate-mode">ใช้เรท: BUY</div>
+<div class="r-grid">
+<div>เลขที่: <strong id="r-no"></strong></div>
+<div>วันเวลา: <strong id="r-time"></strong></div>
+<div>พนักงาน: <strong id="r-staff"></strong></div>
+<div>ลูกค้า: <strong id="r-cust"></strong></div>
+<div>Passport/ID: <strong id="r-cid"></strong></div>
+<div>สกุลเงิน: <strong id="r-ccy"></strong></div>
+<div>จำนวน FX: <strong id="r-amt"></strong></div>
+<div>เรท: <strong id="r-rate"></strong></div>
+<div>เป็นเงินไทย: <strong id="r-thb"></strong></div>
+<div>เรทพิเศษ: <strong id="r-special"></strong></div>
+</div>
+</div>
+<div class="actions no-print">
+<button class="btn btn-primary btn-lg" onclick="window.print()">พิมพ์ใบเสร็จ</button>
+</div>
+
+</section>
+</section>
+</main>
+<footer class="no-print">© TT Exchange — Multi-Company</footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
